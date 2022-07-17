@@ -7,11 +7,11 @@ import (
 	"strings"
 )
 
-type grid [][]bool
+type Field [][]bool
 
 var OVERFLOW = true
 
-func LoadGrid(filename string) grid {
+func LoadFieldFile(filename string) (*Field, error) {
 	f, err := os.ReadFile(filename)
 	if err != nil {
 		log.Fatalln(err)
@@ -21,10 +21,10 @@ func LoadGrid(filename string) grid {
 	height := len(lines)
 	width := len(lines[0])
 
-	field := make(grid, height)
+	field := make(Field, height)
 	for y, line := range lines {
 		if len(line) != width {
-			log.Fatalf("[Error] Lines length mismatch: Line %d contains %d characters, expected %d.",
+			return nil, fmt.Errorf("lines length mismatch: Line %d contains %d characters, expected %d",
 				y+1, len(line), width)
 		}
 		field[y] = make([]bool, width)
@@ -34,15 +34,15 @@ func LoadGrid(filename string) grid {
 			} else if c == 'x' {
 				field[y][x] = true
 			} else {
-				log.Fatalf("[Error] Invalid character: %q at position %d:%d.", c, y+1, x+1)
+				return nil, fmt.Errorf("invalid character: %q at position %d:%d", c, y+1, x+1)
 			}
 		}
 	}
 
-	return field
+	return &field, nil
 }
 
-func (g grid) Print() {
+func (g Field) Print() {
 	for y := range g {
 		for _, live := range g[y] {
 			if live {
@@ -55,9 +55,9 @@ func (g grid) Print() {
 	}
 }
 
-func (g *grid) Evolve() {
+func (g *Field) Evolve() {
 	height, width := len(*g), len((*g)[1])
-	newGrid := make(grid, height)
+	newGrid := make(Field, height)
 	for y := range newGrid {
 		newGrid[y] = make([]bool, width)
 	}
@@ -66,7 +66,7 @@ func (g *grid) Evolve() {
 		for x, live := range (*g)[y] {
 			neighboursYX := generateNeighbors(y, x, height, width, OVERFLOW)
 			liveNeighbors := 0
-			for _, nyx := range neighboursYX {
+			for _, nyx := range *neighboursYX {
 				if (*g)[nyx[0]][nyx[1]] {
 					liveNeighbors++
 				}
@@ -85,8 +85,8 @@ func (g *grid) Evolve() {
 	*g = newGrid
 }
 
-func generateNeighbors(y, x, yMax, xMax int, of bool) [][2]int {
-	neighbours := make([][2]int, 0, 8)
+func generateNeighbors(y, x, yMax, xMax int, of bool) *[][2]int {
+	var neighbours [][2]int
 	for ny := -1; ny <= 1; ny++ {
 		for nx := -1; nx <= 1; nx++ {
 			if ny == 0 && nx == 0 {
@@ -112,5 +112,5 @@ func generateNeighbors(y, x, yMax, xMax int, of bool) [][2]int {
 			neighbours = append(neighbours, [2]int{yy, xx})
 		}
 	}
-	return neighbours
+	return &neighbours
 }
