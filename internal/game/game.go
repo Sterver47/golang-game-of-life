@@ -1,26 +1,28 @@
+// Package game contains the game of life implementation.
 package game
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"strings"
 )
 
 type grid [][]bool
 
+// Game contains a field and configuration.
 type Game struct {
-	Field            *grid
-	Overflow         bool
-	LiveCelChar      string
-	DeadCelChar      string
-	SeparatorCelChar string
+	Field            *grid  // field of the game
+	Overflow         bool   // if true, the cells on the edge of the field will affect each other
+	LiveCelChar      string // character that will be used for live cells when printing to stdout
+	DeadCelChar      string // character that will be used for dead cells when printing to stdout
+	SeparatorCelChar string // character that will be used to separate cells when printing to stdout
 }
 
-func LoadFieldFile(filename string) (*Game, error) {
+// NewGameFromFile loads a field from a file and return the Game.
+func NewGameFromFile(filename string) (*Game, error) {
 	f, err := os.ReadFile(filename)
 	if err != nil {
-		log.Fatalln(err)
+		return nil, err
 	}
 	s := strings.ReplaceAll(string(f), "\r", "")
 	lines := strings.Split(s, "\n")
@@ -54,6 +56,7 @@ func LoadFieldFile(filename string) (*Game, error) {
 	}, nil
 }
 
+// Print prints the actual field of the game to stdout.
 func (g Game) Print() {
 	for y := range *g.Field {
 		for _, live := range (*g.Field)[y] {
@@ -70,6 +73,7 @@ func (g Game) Print() {
 	}
 }
 
+// Evolve evolves the field of the game.
 func (g *Game) Evolve() {
 	height, width := len(*g.Field), len((*g.Field)[1])
 	newGrid := make(grid, height)

@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	g, err := game.LoadFieldFile("grid.txt")
+	g, err := game.NewGameFromFile("grid.txt")
 	if err != nil {
 		log.Fatal(err)
 	}
