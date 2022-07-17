@@ -1,4 +1,4 @@
-package field
+package game
 
 import (
 	"fmt"
@@ -7,11 +7,17 @@ import (
 	"strings"
 )
 
-type Field [][]bool
+type grid [][]bool
 
-var OVERFLOW = true
+type Game struct {
+	Field            *grid
+	Overflow         bool
+	LiveCelChar      string
+	DeadCelChar      string
+	SeparatorCelChar string
+}
 
-func LoadFieldFile(filename string) (*Field, error) {
+func LoadFieldFile(filename string) (*Game, error) {
 	f, err := os.ReadFile(filename)
 	if err != nil {
 		log.Fatalln(err)
@@ -21,7 +27,7 @@ func LoadFieldFile(filename string) (*Field, error) {
 	height := len(lines)
 	width := len(lines[0])
 
-	field := make(Field, height)
+	field := make(grid, height)
 	for y, line := range lines {
 		if len(line) != width {
 			return nil, fmt.Errorf("lines length mismatch: Line %d contains %d characters, expected %d",
@@ -39,35 +45,41 @@ func LoadFieldFile(filename string) (*Field, error) {
 		}
 	}
 
-	return &field, nil
+	return &Game{
+		Field:            &field,
+		Overflow:         true,
+		LiveCelChar:      "▓",
+		DeadCelChar:      "░",
+		SeparatorCelChar: " ",
+	}, nil
 }
 
-func (g Field) Print() {
-	for y := range g {
-		for _, live := range g[y] {
+func (g Game) Print() {
+	for y := range *g.Field {
+		for _, live := range (*g.Field)[y] {
 			if live {
-				fmt.Printf("▓ ")
+				fmt.Print(g.LiveCelChar + g.SeparatorCelChar)
 			} else {
-				fmt.Printf("░ ")
+				fmt.Print(g.DeadCelChar + g.SeparatorCelChar)
 			}
 		}
-		fmt.Printf("\n")
+		fmt.Println()
 	}
 }
 
-func (g *Field) Evolve() {
-	height, width := len(*g), len((*g)[1])
-	newGrid := make(Field, height)
+func (g *Game) Evolve() {
+	height, width := len(*g.Field), len((*g.Field)[1])
+	newGrid := make(grid, height)
 	for y := range newGrid {
 		newGrid[y] = make([]bool, width)
 	}
 
-	for y := range *g {
-		for x, live := range (*g)[y] {
-			neighboursYX := generateNeighbors(y, x, height, width, OVERFLOW)
+	for y := range *g.Field {
+		for x, live := range (*g.Field)[y] {
+			neighboursYX := generateNeighbors(y, x, height, width, g.Overflow)
 			liveNeighbors := 0
 			for _, nyx := range *neighboursYX {
-				if (*g)[nyx[0]][nyx[1]] {
+				if (*g.Field)[nyx[0]][nyx[1]] {
 					liveNeighbors++
 				}
 			}
@@ -82,7 +94,7 @@ func (g *Field) Evolve() {
 			newGrid[y][x] = nextLive
 		}
 	}
-	*g = newGrid
+	g.Field = &newGrid
 }
 
 func generateNeighbors(y, x, yMax, xMax int, of bool) *[][2]int {

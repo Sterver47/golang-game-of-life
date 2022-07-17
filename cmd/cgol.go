@@ -2,25 +2,24 @@ package main
 
 import (
 	"fmt"
-	"github.com/Sterver47/golang-game-of-life/internal/field"
+	"github.com/Sterver47/golang-game-of-life/internal/game"
 	"log"
 	"time"
 )
 
 func main() {
-	game, err := field.LoadFieldFile("grid.txt")
+	g, err := game.LoadFieldFile("grid.txt")
 	if err != nil {
 		log.Fatal(err)
 	}
-	//field.OVERFLOW = false
 
 	i := 1
 	for i < 400 {
 		time.Sleep(100 * time.Millisecond)
 		fmt.Print("\033[H\033[2J")
 		fmt.Printf("Generation: %d\n", i)
-		game.Evolve()
+		g.Evolve()
 		i++
-		game.Print()
+		g.Print()
 	}
 }
