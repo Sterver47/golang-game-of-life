@@ -63,6 +63,9 @@ func (g Game) Print() {
 				fmt.Print(g.DeadCelChar + g.SeparatorCelChar)
 			}
 		}
+		if g.SeparatorCelChar != "" {
+			fmt.Print("\033[1D\033[0K") // Move cursor one cell to the left and clear the rest of the line
+		}
 		fmt.Println()
 	}
 }
